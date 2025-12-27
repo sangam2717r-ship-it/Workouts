@@ -5,111 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Workout Tracker</title>
     
-    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/workout-icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <style>
-        :root { --blue: #2196F3; --green: #4CAF50; --red: #f44336; }
         body { font-family: -apple-system, sans-serif; background: #f4f7f9; margin: 0; padding: 20px; }
-        header { background: var(--blue); color: white; padding: 20px; text-align: center; border-radius: 15px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
-        .input-group { background: white; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        input { border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 80px; font-size: 1rem; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .ex-btn { background: var(--green); color: white; border: none; padding: 18px 10px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 0 #388E3C; }
-        .ex-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #388E3C; }
-
-        .log-container { margin-top: 30px; }
-        .log-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--blue); }
-        .history { background: #e3f2fd; padding: 15px; border-radius: 12px; margin-top: 20px; }
-        
-        .reset-btn { background: var(--red); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 20px; }
+        header { background: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        .input-group { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        input { border: 1px solid #ddd; padding: 8px; border-radius: 5px; width: 70px; font-size: 16px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ex-btn { background: #4CAF50; color: white; border: none; padding: 15px 5px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .ex-btn:active { background: #388E3C; opacity: 0.8; }
+        .log-card { background: white; padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 5px solid #2196F3; display: flex; justify-content: space-between; align-items: center; }
+        .reset-btn { background: #f44336; color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; margin-top: 30px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>MY WORKOUT LOG</header>
+<header>DAILY WORKOUTS</header>
 
 <div class="input-group">
     <span>Weight:</span>
-    <input type="number" id="weight" step="0.5" value="10.0">
-    <span>kg</span>
+    <input type="number" id="wVal" step="0.5" value="10.0"> <span>kg</span>
 </div>
 
-<div class="grid" id="exerciseGrid"></div>
+<div class="grid" id="btnGrid"></div>
 
-<div class="log-container">
+<div id="logArea">
     <h3>Today's Progress</h3>
-    <div id="todayLogs"></div>
+    <div id="displayLogs"></div>
 </div>
 
-<div class="history">
-    <h3>History</h3>
-    <div id="historyLogs"></div>
-</div>
-
-<button class="reset-btn" onclick="clearToday()">Reset Today's Log</button>
+<button class="reset-btn" onclick="clearLogs()">Clear All Data</button>
 
 <script>
-    const exercises = [
+    // 1. Exercise List
+    const exerciseList = [
         "Bicep Curl", "Dumbbell Raise", "Side Extension", "Shrugs", 
-        "Back Row", "Push-ups", "Plank", "Situps", "Russian Twist"
+        "Back Row", "Incline Shrugs", "Push-ups", "Plank", 
+        "Situps", "Russian Twist", "Knee Crunch"
     ];
 
-    let logs = JSON.parse(localStorage.getItem('workout_pwa_logs')) || [];
+    // 2. Load Data
+    let myData = JSON.parse(localStorage.getItem('workout_save')) || [];
 
-    function render() {
-        const today = new Date().toLocaleDateString();
-        const tDiv = document.getElementById('todayLogs');
-        const hDiv = document.getElementById('historyLogs');
-        tDiv.innerHTML = ''; hDiv.innerHTML = '';
-
-        [...logs].reverse().forEach(log => {
-            const entry = `<div class="log-card">
-                <div><strong>${log.n}</strong><br><small>${log.t}</small></div>
-                <div>${log.w} kg</div>
-            </div>`;
-            if(log.d === today) tDiv.innerHTML += entry;
-            else hDiv.innerHTML += entry;
+    // 3. Display Function
+    function showLogs() {
+        const area = document.getElementById('displayLogs');
+        area.innerHTML = '';
+        [...myData].reverse().forEach(entry => {
+            area.innerHTML += `
+                <div class="log-card">
+                    <span><strong>${entry.n}</strong></span>
+                    <span>${entry.w}kg</span>
+                </div>`;
         });
     }
 
-    function addLog(name) {
-        const now = new Date();
-        logs.push({
-            n: name,
-            w: document.getElementById('weight').value,
-            d: now.toLocaleDateString(),
-            t: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
-        localStorage.setItem('workout_pwa_logs', JSON.stringify(logs));
-        render();
+    // 4. Add Log Function
+    function logWorkout(name) {
+        const weight = document.getElementById('wVal').value;
+        myData.push({ n: name, w: weight });
+        localStorage.setItem('workout_save', JSON.stringify(myData));
+        showLogs();
     }
 
-    function clearToday() {
-        const today = new Date().toLocaleDateString();
-        logs = logs.filter(l => l.d !== today);
-        localStorage.setItem('workout_pwa_logs', JSON.stringify(logs));
-        render();
+    // 5. Clear Function
+    function clearLogs() {
+        if(confirm("Clear everything?")) {
+            myData = [];
+            localStorage.removeItem('workout_save');
+            showLogs();
+        }
     }
 
-    const grid = document.getElementById('exerciseGrid');
-    exercises.forEach(ex => {
-        const btn = document.createElement('button');
-        btn.className = 'ex-btn';
-        btn.innerText = ex;
-        btn.onclick = () => addLog(ex);
-        grid.appendChild(btn);
+    // 6. Build Buttons
+    const grid = document.getElementById('btnGrid');
+    exerciseList.forEach(exName => {
+        const b = document.createElement('button');
+        b.className = 'ex-btn';
+        b.innerText = exName;
+        b.onclick = () => logWorkout(exName);
+        grid.appendChild(b);
     });
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
-
-    render();
+    // Initial Run
+    showLogs();
 </script>
+
 </body>
 </html>

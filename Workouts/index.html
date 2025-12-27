@@ -1,87 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Workout Tracker</title>
-    
-    <link rel="apple-touch-icon" href="icons/workout-icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Log</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f4f7; margin: 0; padding: 15px; }
-        .header { background: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 15px; font-weight: bold; font-size: 1.2rem; }
-        .weight-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        input { border: 1px solid #ccc; padding: 10px; border-radius: 8px; width: 80px; font-size: 1.1rem; text-align: center; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { background: #4CAF50; color: white; border: none; padding: 18px 5px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; -webkit-appearance: none; }
-        .btn:active { opacity: 0.7; transform: scale(0.98); }
-        .log-list { margin-top: 20px; }
-        .card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 5px solid #2196F3; }
-        .reset { background: #f44336; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; margin-top: 30px; font-weight: bold; }
+        body { font-family: sans-serif; padding: 20px; background: #eee; }
+        .header { background: #2196F3; color: white; padding: 15px; text-align: center; border-radius: 8px; font-weight: bold; }
+        .weight-row { margin: 15px 0; background: #fff; padding: 10px; border-radius: 8px; display: flex; justify-content: center; gap: 10px; }
+        input { width: 60px; font-size: 1.2rem; text-align: center; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 5px; border-radius: 8px; font-weight: bold; }
+        .card { background: white; padding: 10px; border-radius: 5px; margin-top: 5px; display: flex; justify-content: space-between; border-left: 4px solid #2196F3; }
     </style>
 </head>
 <body>
 
 <div class="header">WORKOUT TRACKER</div>
 
-<div class="weight-box">
-    <span>Weight:</span>
-    <input type="number" id="weightInput" step="0.5" value="10.0">
-    <span>kg</span>
+<div class="weight-row">
+    Weight: <input type="number" id="w" step="0.5" value="10.0"> kg
 </div>
 
-<div class="grid" id="buttonGrid"></div>
+<div class="grid" id="btns"></div>
 
-<div class="log-list">
-    <h3>Today's Training</h3>
-    <div id="logOutput"></div>
-</div>
-
-<button class="reset" onclick="clearData()">RESET ALL HISTORY</button>
+<h3>Logs</h3>
+<div id="logs"></div>
 
 <script>
-    const exercises = [
-        "Bicep Curl", "DB Raise", "Side Extension", "Shrugs", 
-        "Back Row", "Incline Shrugs", "Push-ups", "Plank", 
-        "Situps", "Russian Twist", "Dumbbells"
-    ];
-
-    let logs = JSON.parse(localStorage.getItem('workout_v3')) || [];
+    const ex = ["Bicep Curl", "DB Raise", "Side Ext", "Shrugs", "Back Row", "Push-ups", "Plank", "Situps"];
+    let data = JSON.parse(localStorage.getItem('w_data')) || [];
 
     function render() {
-        const out = document.getElementById('logOutput');
-        out.innerHTML = '';
-        [...logs].reverse().forEach(item => {
-            out.innerHTML += `<div class="card"><strong>${item.n}</strong> <span>${item.w}kg</span></div>`;
+        const div = document.getElementById('logs');
+        div.innerHTML = '';
+        data.slice().reverse().forEach(i => {
+            div.innerHTML += `<div class="card"><strong>${i.n}</strong> <span>${i.w}kg</span></div>`;
         });
     }
 
-    function addLog(name) {
-        const w = document.getElementById('weightInput').value;
-        logs.push({ n: name, w: w });
-        localStorage.setItem('workout_v3', JSON.stringify(logs));
-        render();
-    }
-
-    function clearData() {
-        if(confirm("Delete all history?")) {
-            logs = [];
-            localStorage.removeItem('workout_v3');
-            render();
-        }
-    }
-
-    const grid = document.getElementById('buttonGrid');
-    exercises.forEach(name => {
+    ex.forEach(n => {
         const b = document.createElement('button');
-        b.className = 'btn';
-        b.innerText = name;
-        b.onclick = () => addLog(name);
-        grid.appendChild(b);
+        b.innerText = n;
+        b.onclick = () => {
+            data.push({n: n, w: document.getElementById('w').value});
+            localStorage.setItem('w_data', JSON.stringify(data));
+            render();
+        };
+        document.getElementById('btns').appendChild(b);
     });
-
     render();
 </script>
 </body>
